@@ -39,6 +39,9 @@ pub struct IntoIter<T>(LinkedList<T>);
 pub struct Iter<'a, T> {
     next: Option<&'a Node<T>>,
 }
+pub struct IterMut<'a, T> {
+    next: Option<&'a mut Node<T>>,
+}
 
 impl<T> Display for LinkedList<T>
 where
@@ -121,7 +124,23 @@ impl<T> LinkedList<T> {
             next: self.head.as_deref(),
         }
     }
+
+    pub fn iter_mut(&mut self) -> IterMut<T> {
+        IterMut {
+            next: self.head.as_deref_mut(),
+        }
+    }
 }
+impl<'a, T> Iterator for IterMut<'a, T> {
+    type Item = &'a mut T;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.next.take().map(|n| {
+            self.next = n.next.as_deref_mut();
+            &mut n.data
+        })
+    }
+}
+
 impl<T> Drop for LinkedList<T> {
     fn drop(&mut self) {
         let mut current = self.head.take();
@@ -203,5 +222,33 @@ mod tests {
         assert_eq!(list.peek(), Some(&100));
         assert_eq!(list.pop(), Some(100));
         assert_eq!(list.peek(), Some(&11));
+    }
+
+    #[test]
+    fn iter() {
+        let mut list = LinkedList::<i32>::new();
+
+        list.push_front(13);
+        list.push_front(14);
+        list.push_front(15);
+        let mut iter = list.iter();
+        assert_eq!(iter.next(), Some(&15));
+        assert_eq!(iter.next(), Some(&14));
+        assert_eq!(iter.next(), Some(&13));
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn iter_mut() {
+        let mut list = LinkedList::<i32>::new();
+
+        list.push_front(13);
+        list.push_front(14);
+        list.push_front(15);
+        let mut iter = list.iter_mut();
+        assert_eq!(iter.next(), Some(&mut 15));
+        assert_eq!(iter.next(), Some(&mut 14));
+        assert_eq!(iter.next(), Some(&mut 13));
+        assert_eq!(iter.next(), None);
     }
 }
