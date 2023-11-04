@@ -1,5 +1,5 @@
 [package]
-name = "data-structure-in-rust"
+name = "playground.dsa.rust"
 version = "0.1.0"
 edition = "2021"
 
