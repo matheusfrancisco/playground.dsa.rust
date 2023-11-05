@@ -1,5 +1,5 @@
 [package]
-name = "playground.dsa.rust"
+name = "playground-dsa-rust"
 version = "0.1.0"
 edition = "2021"
 
