@@ -6,9 +6,9 @@ use std::{
 };
 
 /*
-* head
-    |
-    v
+* head                        tail
+    |                           |
+    v                           v
 +--------+   +--------+   +--------+
 |        |   |        |   |        |
 | node 0 |-->| node 1 |-->| node 2 |--> NULL
