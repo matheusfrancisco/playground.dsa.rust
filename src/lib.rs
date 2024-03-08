@@ -10,3 +10,5 @@ pub mod bubble_sort;
 pub use bubble_sort::*;
 pub mod merge_sort;
 pub use merge_sort::*;
+pub mod insert_sorting;
+pub use insert_sorting::*;
