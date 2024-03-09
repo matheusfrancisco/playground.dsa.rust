@@ -30,7 +30,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_bubble_sorting() {
+    fn test_merge_sorting() {
         let mut arr = vec![5, 4, 1, 2, 3];
         assert_eq!(merge_sort(&mut arr), vec![1, 2, 3, 4, 5]);
     }
