@@ -12,3 +12,5 @@ pub mod merge_sort;
 pub use merge_sort::*;
 pub mod insert_sorting;
 pub use insert_sorting::*;
+pub mod array_list;
+pub use array_list::*;
