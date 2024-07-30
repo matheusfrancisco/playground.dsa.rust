@@ -38,7 +38,7 @@ pub struct ArrayList<T> {
 
 impl<T> ArrayList<T>
 where
-    T: Default + Clone + Debug,
+    T: Default + Clone + Debug + PartialEq,
 {
     pub fn new(capacity: usize) -> ArrayList<T> {
         ArrayList {
@@ -47,7 +47,6 @@ where
             inner: vec![T::default(); capacity],
         }
     }
-    fn prepend(item: T) {}
 
     fn shrink(&mut self) {
         let prev = &self.inner;
@@ -69,7 +68,7 @@ where
         self.length += 1;
     }
 
-    pub fn remove(&mut self) -> T {
+    pub fn pop(&mut self) -> T {
         let item = self.inner[self.length - 1].clone();
         self.inner[self.length - 1] = T::default();
         self.length -= 1;
@@ -79,6 +78,47 @@ where
         match idx < self.length {
             true => Some(&self.inner[idx]),
             _ => None,
+        }
+    }
+    pub fn insert_at(&mut self, item: T, idx: usize) {
+        if self.inner.len() == self.length {
+            self.shrink();
+        }
+        for i in ((idx + 1)..=self.length).rev() {
+            self.inner[i] = self.inner[i - 1].clone();
+        }
+        self.inner[idx] = item;
+        self.length += 1;
+    }
+
+    pub fn preprend(&mut self, item: T) {
+        println!("Prepending {item:?} to {self:?}");
+        self.insert_at(item, 0);
+    }
+
+    pub fn remove(&mut self, item: &T) -> Option<T> {
+        for i in 0..self.length {
+            if &self.inner[i] == item {
+                return self.remove_at(i).unwrap()
+            }
+        }
+        None
+
+    }
+
+    pub fn remove_at(&mut self, idx: usize) -> Result<Option<T>, &str> {
+        println!("Removing at {idx} from {self:?}");
+        match idx < self.length {
+            true => {
+                let item = self.inner[idx].clone();
+                for i in idx..(self.length-1) {
+                    self.inner[i] = self.inner[i + 1].clone();
+                }
+                self.inner[self.length - 1] = T::default();
+                self.length -= 1;
+                Ok(Some(item))
+            }
+            _ => Err("Index out of bounds"),
         }
     }
 }
@@ -131,15 +171,56 @@ mod tests {
         arr.append(3);
         arr.append(-1);
         assert_eq!(4, arr.length);
-        assert_eq!(-1, arr.remove());
+        assert_eq!(-1, arr.pop());
         assert_eq!(4, arr.capacity);
         arr.append(1);
         arr.append(2);
         arr.append(3);
         assert_eq!(8, arr.capacity);
-        assert_eq!(3, arr.remove());
-        assert_eq!(2, arr.remove());
-        assert_eq!(1, arr.remove());
+        assert_eq!(3, arr.pop());
+        assert_eq!(2, arr.pop());
+        assert_eq!(1, arr.pop());
         assert_eq!(vec![1, 2, 3, 0, 0, 0, 0, 0], arr.inner);
+    }
+
+    #[test]
+    fn test_preprend() {
+        let mut arr = ArrayList::new(4);
+        arr.append(1);
+        arr.append(2);
+        arr.append(3);
+        arr.preprend(4);
+        assert_eq!(4, arr.length);
+        assert_eq!(Some(&4), arr.get(0));
+    }
+
+    #[test]
+    fn test_insert_at() {
+        let mut arr = ArrayList::new(4);
+        arr.append(1);
+        arr.insert_at(4, 0);
+        arr.insert_at(2, 1);
+        arr.insert_at(3, 2);
+        assert_eq!(4, arr.length);
+        assert_eq!(Some(&4), arr.get(0));
+        assert_eq!(Some(&2), arr.get(1));
+        assert_eq!(Some(&3), arr.get(2));
+        assert_eq!(Some(&1), arr.get(3));
+    }
+
+    #[test]
+    fn test_remove_at() {
+        let mut arr = ArrayList::new(4);
+        arr.append(1);
+        arr.append(2);
+        arr.append(4);
+        arr.append(5);
+        let i = arr.remove_at(1).unwrap();
+        assert_eq!(Some(2), i);
+        assert_eq!(vec![1,4,5,0], arr.inner);
+        let _ = arr.remove_at(0).unwrap();
+        assert_eq!(vec![4,5,0,0], arr.inner);
+        let i = arr.remove(&5).unwrap();
+        assert_eq!(5, i);
     }
 }
