@@ -27,6 +27,7 @@ Array List
 
 use std::fmt::Debug;
 
+//#TODO : change it for rawvec
 type Array<T> = Vec<T>;
 
 #[derive(Debug)]
