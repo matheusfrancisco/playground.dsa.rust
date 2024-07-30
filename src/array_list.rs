@@ -25,12 +25,12 @@ Array List
   - It has the following methods:
 */
 
-use std::fmt::Debug;
+use std::{fmt::Debug, iter::once};
 
 type Array<T> = Vec<T>;
 
 #[derive(Debug)]
-struct ArrayList<T> {
+pub struct ArrayList<T> {
     pub length: usize,
     inner: Array<T>,
     capacity: usize,
@@ -40,7 +40,7 @@ impl<T> ArrayList<T>
 where
     T: Default + Clone + Debug,
 {
-    fn new(capacity: usize) -> ArrayList<T> {
+    pub fn new(capacity: usize) -> ArrayList<T> {
         ArrayList {
             length: 0,
             capacity,
@@ -51,7 +51,7 @@ where
 
     fn shrink(&mut self) {
         let prev = &self.inner;
-        let new_capacity = self.capacity * 2; 
+        let new_capacity = self.capacity * 2;
         self.capacity = new_capacity;
         let mut new = vec![T::default(); new_capacity];
         for i in 0..prev.len() {
@@ -60,7 +60,7 @@ where
         self.inner = new;
     }
 
-    fn append(&mut self, item: T) {
+    pub fn append(&mut self, item: T) {
         println!("Appending {item:?} to {self:?}");
         if self.inner.len() == self.length {
             self.shrink();
@@ -68,16 +68,18 @@ where
         self.inner[self.length] = item;
         self.length += 1;
     }
+
+    pub fn remove(&mut self) -> T {
+        let item = self.inner[self.length - 1].clone();
+        self.inner[self.length - 1] = T::default();
+        self.length -= 1;
+        item
+    }
 }
 
 mod tests {
 
     use super::*;
-
-    #[test]
-    fn test_array_list() {
-        assert_eq!(1, 2);
-    }
 
     #[test]
     fn test_array_list_append() {
@@ -90,10 +92,20 @@ mod tests {
     fn test_array_list_append_shrink() {
         let mut arr = ArrayList::new(4);
         arr.append(1);
+        assert_eq!(arr.inner[0], 1);
+        assert_eq!(arr.inner[1], 0);
+        assert_eq!(arr.inner[2], 0);
+        assert_eq!(arr.inner[3], 0);
         arr.append(2);
+        assert_eq!(arr.inner[0], 1);
+        assert_eq!(arr.inner[1], 2);
+        assert_eq!(arr.inner[2], 0);
+        assert_eq!(arr.inner[3], 0);
         arr.append(3);
         arr.append(4);
         arr.append(4);
+        assert_eq!(arr.inner[4], 4);
+        assert_eq!(arr.inner[5], 0);
         assert_eq!(arr.length, 5);
         assert_eq!(arr.capacity, 8);
     }
