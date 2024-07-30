@@ -25,7 +25,7 @@ Array List
   - It has the following methods:
 */
 
-use std::{fmt::Debug, iter::once};
+use std::fmt::Debug;
 
 type Array<T> = Vec<T>;
 
@@ -75,6 +75,12 @@ where
         self.length -= 1;
         item
     }
+    pub fn get(&self, idx: usize) -> Option<&T> {
+        match idx < self.length {
+            true => Some(&self.inner[idx]),
+            _ => None,
+        }
+    }
 }
 
 mod tests {
@@ -86,6 +92,13 @@ mod tests {
         let mut arr = ArrayList::new(1);
         arr.append(1);
         assert_eq!(arr.length, 1);
+    }
+
+    #[test]
+    fn test_array_list_get() {
+        let mut arr = ArrayList::new(1);
+        arr.append(1);
+        assert_eq!(arr.get(0), Some(&1));
     }
 
     #[test]
@@ -108,5 +121,25 @@ mod tests {
         assert_eq!(arr.inner[5], 0);
         assert_eq!(arr.length, 5);
         assert_eq!(arr.capacity, 8);
+    }
+
+    #[test]
+    fn test_array_list_remove_shrink() {
+        let mut arr = ArrayList::new(4);
+        arr.append(1);
+        arr.append(2);
+        arr.append(3);
+        arr.append(-1);
+        assert_eq!(4, arr.length);
+        assert_eq!(-1, arr.remove());
+        assert_eq!(4, arr.capacity);
+        arr.append(1);
+        arr.append(2);
+        arr.append(3);
+        assert_eq!(8, arr.capacity);
+        assert_eq!(3, arr.remove());
+        assert_eq!(2, arr.remove());
+        assert_eq!(1, arr.remove());
+        assert_eq!(vec![1, 2, 3, 0, 0, 0, 0, 0], arr.inner);
     }
 }
