@@ -14,3 +14,8 @@ pub mod insert_sorting;
 pub use insert_sorting::*;
 pub mod array_list;
 pub use array_list::*;
+pub mod vector;
+pub use vector::*;
+
+pub mod ds;
+pub use ds::*;
