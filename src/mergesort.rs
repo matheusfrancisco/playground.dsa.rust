@@ -109,6 +109,91 @@ fn merge_recursive_optimized(a: Vec<i32>, b: Vec<i32>) -> Vec<i32> {
     merged
 }
 
+fn merge2(a: &mut [i32], mid: usize) {
+    let n = a.len();
+    if mid == 0 || mid >= n {
+        return;
+    }
+    let left = a[..mid].to_vec();
+    let mut i = 0;
+    let mut j = mid;
+    let mut k = 0;
+
+    while i < left.len() && j < n {
+        if left[i] < a[j] {
+            a[k] = left[i];
+            i += 1;
+        } else {
+            a[k] = a[j];
+            j += 1;
+        }
+        k += 1;
+    }
+}
+
+// worst case time complexity is O(n^2) since we are
+// rotating the array for each element in the left half
+// 1. Rotation-based merge (O(1) space, O(n²) worst case)
+fn merge3(a: &mut [i32], mid: usize) {
+    let n = a.len();
+    if mid == 0 || mid >= n {
+        return;
+    }
+
+    let mut i = 0;
+    let mut j = mid;
+    let mut left_end = mid;
+
+    while i < left_end && j < n {
+        if a[i] <= a[j] {
+            i += 1;
+        } else {
+            a[i..=j].rotate_right(1);
+            i += 1;
+            left_end += 1;
+            j += 1;
+        }
+    }
+}
+
+fn merge_inplace_insertion(a: &mut [i32], mut mid: usize) {
+    let n = a.len();
+    if mid == 0 || mid >= n {
+        return;
+    }
+
+    if mid <= n - mid {
+        // Left is smaller: insert each left[i] into the right run
+        let mut i = 0;
+        while i < mid {
+            let x = a[i];
+            let right = &a[mid..];
+            let j = right.partition_point(|&r| r < x);
+            if j < right.len() {
+                // Rotate: move a[i] to position mid+j
+                // Segment a[i..=mid+j], rotate left by (mid+j-i) puts a[i] at end
+                a[i..=mid + j].rotate_left(mid + j - i);
+                mid += 1; // boundary shifted
+            }
+            i += 1;
+        }
+    } else {
+        // Right is smaller: insert each right[j] into the left run (from the end)
+        let mut j = mid;
+        while j < n {
+            let x = a[j];
+            let left = &a[..mid];
+            let i = left.partition_point(|&l| l <= x);
+            if i < mid {
+                // Rotate: move a[j] to position i
+                a[i..=j].rotate_right(j - i);
+                mid += 1;
+            }
+            j += 1;
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -147,6 +232,22 @@ mod tests {
         let merged = merge_recursive_optimized(a, b);
         let c: Vec<i32> = vec![1, 2, 3, 4, 5, 6, 8, 9];
         assert_eq!(merged, c);
+    }
+
+    #[test]
+    fn test_merge2() {
+        let mut a: Vec<i32> = vec![1, 3, 5, 2, 4, 6, 8, 9];
+        merge2(&mut a, 3);
+        let c: Vec<i32> = vec![1, 2, 3, 4, 5, 6, 8, 9];
+        assert_eq!(a, c);
+    }
+
+    #[test]
+    fn test_merge3() {
+        let mut a: Vec<i32> = vec![1, 3, 5, 2, 4, 6, 8, 9];
+        merge3(&mut a, 3);
+        let c: Vec<i32> = vec![1, 2, 3, 4, 5, 6, 8, 9];
+        assert_eq!(a, c);
     }
 }
 
