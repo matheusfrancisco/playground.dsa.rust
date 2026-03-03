@@ -1,4 +1,50 @@
-use std::cmp::max;
+use std::{cmp::max, mem::ManuallyDrop, ptr};
+
+pub fn zero_copy_merge(x: Vec<i32>, y: Vec<i32>) -> Vec<i32> {
+    let mut x = ManuallyDrop::new(x);
+    let mut y = ManuallyDrop::new(y);
+    let m = x.len();
+    let n = y.len();
+    let xp = x.as_ptr();
+    let yp = y.as_ptr();
+    let mut out = Vec::with_capacity(m + n);
+    let mut i = 0;
+    let mut j = 0;
+
+    unsafe {
+        while i < m && j < n {
+            // Compare by reference (no move)
+            let a = &*xp.add(i);
+            let b = &*yp.add(j);
+
+            if a <= b {
+                out.push(ptr::read(xp.add(i))); // move from x[i]
+                i += 1;
+            } else {
+                out.push(ptr::read(yp.add(j))); // move from y[j]
+                j += 1;
+            }
+        }
+
+        while i < m {
+            out.push(ptr::read(xp.add(i)));
+            i += 1;
+        }
+
+        while j < n {
+            out.push(ptr::read(yp.add(j)));
+            j += 1;
+        }
+    }
+
+    // We used ptr::read to move elements out. Prevent dropping the originals:
+    unsafe {
+        ManuallyDrop::drop(&mut x); // drops Vec structure (capacity pointer), NOT elements
+        ManuallyDrop::drop(&mut y);
+    }
+
+    out
+}
 
 //  this function receives two sorted vectors
 // and merges them into a single sorted vector
@@ -136,18 +182,21 @@ fn merge2(a: &mut [i32], mid: usize) {
 // 1. Rotation-based merge (O(1) space, O(n²) worst case)
 fn merge3(a: &mut [i32], mid: usize) {
     let n = a.len(); // O(1)
-    if mid == 0 || mid >= n { // O(1)
+    if mid == 0 || mid >= n {
+        // O(1)
         return; // O(1)
     } // O(1)
 
     let mut i = 0; // O(1)
-    let mut j = mid;// O(1)
-    let mut left_end = mid;// O(1)
+    let mut j = mid; // O(1)
+    let mut left_end = mid; // O(1)
 
     //i moves in both branch -> c + e <= n = O(n)
     //j only moves i the else branch = e <= R where R is the number of elements in the right half
-    while i < left_end && j < n { //O(1) * (c + e) iterations
-        if a[i] <= a[j] {// // O(1) × (c + e)
+    while i < left_end && j < n {
+        //O(1) * (c + e) iterations
+        if a[i] <= a[j] {
+            // // O(1) × (c + e)
             i += 1; // O(1) × (c)
         } else {
             a[i..=j].rotate_right(1); // O(j-i+1) * (e) in worst case
@@ -282,4 +331,14 @@ mod tests {
         let c: Vec<i32> = vec![1, 2, 3, 4, 5, 6, 8, 9];
         assert_eq!(a, c);
     }
+
+    #[test ]
+    fn test_zero_copy_merge() {
+        let a: Vec<i32> = vec![1, 3, 5];
+        let b: Vec<i32> = vec![2, 4, 6, 8, 9];
+        let merged = zero_copy_merge(a, b);
+        let c: Vec<i32> = vec![1, 2, 3, 4, 5, 6, 8, 9];
+        assert_eq!(merged, c);
+    }
+
 }
