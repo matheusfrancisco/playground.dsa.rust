@@ -135,27 +135,30 @@ fn merge2(a: &mut [i32], mid: usize) {
 // rotating the array for each element in the left half
 // 1. Rotation-based merge (O(1) space, O(n²) worst case)
 fn merge3(a: &mut [i32], mid: usize) {
-    let n = a.len();
-    if mid == 0 || mid >= n {
-        return;
-    }
+    let n = a.len(); // O(1)
+    if mid == 0 || mid >= n { // O(1)
+        return; // O(1)
+    } // O(1)
 
-    let mut i = 0;
-    let mut j = mid;
-    let mut left_end = mid;
+    let mut i = 0; // O(1)
+    let mut j = mid;// O(1)
+    let mut left_end = mid;// O(1)
 
-    while i < left_end && j < n {
-        if a[i] <= a[j] {
-            i += 1;
+    //i moves in both branch -> c + e <= n = O(n)
+    //j only moves i the else branch = e <= R where R is the number of elements in the right half
+    while i < left_end && j < n { //O(1) * (c + e) iterations
+        if a[i] <= a[j] {// // O(1) × (c + e)
+            i += 1; // O(1) × (c)
         } else {
-            a[i..=j].rotate_right(1);
-            i += 1;
+            a[i..=j].rotate_right(1); // O(j-i+1) * (e) in worst case
+            i += 1; // O(1) × (e)
             left_end += 1;
             j += 1;
         }
     }
 }
 
+// merge_inplace_insertion: binary search + rotate, O(1) space, O(n log n) time
 fn merge_inplace_insertion(a: &mut [i32], mut mid: usize) {
     let n = a.len();
     if mid == 0 || mid >= n {
@@ -194,9 +197,39 @@ fn merge_inplace_insertion(a: &mut [i32], mut mid: usize) {
     }
 }
 
+fn mergesort(arr: Vec<i32>) -> Vec<i32> {
+    if arr.len() <= 1 {
+        return arr;
+    }
+    // split the array into two halves
+    let mid = arr.len() / 2;
+    // why this is not efficient? because we are creating
+    // new vectors for each half and we are also using slicing which creates new vectors as well
+    // recursively sort the left and right halves and then merge them
+    let left = mergesort(arr[..mid].to_vec());
+    // recursively sort the left and right halves and then merge them
+    let right = mergesort(arr[mid..].to_vec());
+    merge(left, right)
+}
+
+// In-place merging challenge.
+// Invent a function that is as fast as merge and solves the merging problem in-place, i.e., without an auxiliary array.
+// I think in any order lang would be easy
+// 1. In-place merge using insertion (O(1) space, O(n²) worst case)
+// merge3
+//is truly in-place — it takes &mut [i32] and allocates zero auxiliary memory. It uses rotate_right(1) to shift elements,
+//which is O(1) space. Trade-off: worst case is O(n²) time because each rotation can shift up to n elements.
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn test_mergesort() {
+        let arr: Vec<i32> = vec![5, 2, 9, 1, 5, 6];
+        let sorted = mergesort(arr);
+        let expected: Vec<i32> = vec![1, 2, 5, 5, 6, 9];
+        assert_eq!(sorted, expected);
+    }
 
     #[test]
     fn test_merge_not_good() {
@@ -250,4 +283,3 @@ mod tests {
         assert_eq!(a, c);
     }
 }
-
